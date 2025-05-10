@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Detail #{{ log.id }} - Medical History LLM Assistant</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row py-3">
+            <div class="col-12">
+                <h1 class="text-center">Log Entry #{{ log.id }}</h1>
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('main.view_logs') }}" class="btn btn-primary">Back to Logs</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Main App</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3>Query Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>ID:</strong> {{ log.id }}</p>
+                                <p><strong>Timestamp:</strong> {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                                <p><strong>Model:</strong> {{ log.model_name }}</p>
+                                <p><strong>Processing Time:</strong> {{ log.processing_time_ms }} ms</p>
+                                <p>
+                                    <strong>Status:</strong> 
+                                    {% if log.error %}
+                                    <span class="badge bg-danger">Error</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Success</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                {% if log.error %}
+                                <div class="alert alert-danger">
+                                    <h5>Error Message:</h5>
+                                    <p>{{ log.error }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3>Query Text (Input)</h3>
+                            </div>
+                            <div class="card-body">
+                                <pre class="query-text">{{ log.query_text }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3>Raw Response</h3>
+                            </div>
+                            <div class="card-body">
+                                <pre class="raw-response">{{ log.raw_response }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3>Recommended Questions</h3>
+                            </div>
+                            <div class="card-body">
+                                <pre>{{ log.recommended_questions }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3>Recommended Investigations</h3>
+                            </div>
+                            <div class="card-body">
+                                <pre>{{ log.recommended_investigations }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3>Problem List</h3>
+                            </div>
+                            <div class="card-body">
+                                <pre>{{ log.problem_list }}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical History LLM Assistant</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row py-3">
+            <div class="col-12">
+                <h1 class="text-center">Medical History LLM Assistant</h1>
+                <div class="text-center mb-3">
+                    <a href="/logs" class="btn btn-info">View Query Logs</a>
+                    <a href="/models" class="btn btn-primary">Manage Models</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Left side: History input -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h3>Patient History</h3>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="historyTextarea" class="form-control h-100" rows="18">{{ record.history }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right side: LLM output sections with tabs for each model -->
+            <div class="col-md-6">
+                <!-- Tabs for different models -->
+                <ul class="nav nav-tabs" id="modelTabs" role="tablist">
+                    {% for model in model_configs %}
+                        {% if model.is_active %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                    id="model-tab-{{ model.id }}" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#model-content-{{ model.id }}" 
+                                    type="button" 
+                                    role="tab" 
+                                    aria-controls="model-content-{{ model.id }}" 
+                                    aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                {{ model.name }}
+                            </button>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                
+                <!-- Tab content -->
+                <div class="tab-content" id="modelTabsContent">
+                    {% for model in model_configs %}
+                        {% if model.is_active %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                             id="model-content-{{ model.id }}" 
+                             role="tabpanel" 
+                             aria-labelledby="model-tab-{{ model.id }}">
+                            
+                            <!-- Model info header -->
+                            <div class="alert alert-info mt-2">
+                                <small>
+                                    <strong>Model:</strong> {{ model.model_name }} ({{ model.model_type }})
+                                    {% if model.last_processing_time_ms %}
+                                    <span class="float-end"><strong>Processing time:</strong> {{ model.last_processing_time_ms }}ms</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            
+                            <!-- Recommended Questions & Exams -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h3>Recommended Questions & Exams</h3>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="questions-output" data-model-id="{{ model.id }}">{{ model.recommended_questions }}</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Recommended Investigations -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h3>Recommended Investigations</h3>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="investigations-output" data-model-id="{{ model.id }}">{{ model.recommended_investigations }}</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Problem List with ICD-10 Codes -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h3>Problem List (ICD-10)</h3>
+                                </div>
+                                <div class="card-body">
+                                    <pre class="problems-output" data-model-id="{{ model.id }}">{{ model.problem_list }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <!-- Available Investigations List -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Available Investigations</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <input type="text" id="newInvestigationInput" class="form-control" placeholder="New investigation name">
+                            </div>
+                            <div class="col-auto">
+                                <button id="addInvestigationBtn" class="btn btn-primary">Add</button>
+                            </div>
+                        </div>
+                        <ul id="investigationsList" class="list-group">
+                            {% for investigation in investigations %}
+                            <li class="list-group-item">{{ investigation.name }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- LLM Configuration -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>LLM Configuration</h3>
+                    </div>
+                    <div class="card-body">
+                        <h5>Update Settings</h5>
+                        <div class="mb-3">
+                            <label for="updateFrequency" class="form-label">Update every X words:</label>
+                            <input type="number" class="form-control" id="updateFrequency" value="{{ config.update_frequency }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="lineCountBeforeUpdate" class="form-label">Number of lines before update:</label>
+                            <input type="number" class="form-control" id="lineCountBeforeUpdate" min="1" max="20" value="{{ config.line_count_before_update }}">
+                            <small class="form-text text-muted">Number of new lines with text on them to collect before sending to LLM</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inactivityTimer" class="form-label">Inactivity timer (seconds):</label>
+                            <input type="number" class="form-control" id="inactivityTimer" min="1" max="10" value="{{ config.inactivity_timer|default(3) }}">
+                            <small class="form-text text-muted">If stopped for this many seconds and different from last sent text, send to LLM</small>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="updateOnNewline" {% if config.update_on_newline %}checked{% endif %}>
+                            <label class="form-check-label" for="updateOnNewline">Update on new line</label>
+                        </div>
+                        <button id="saveConfigBtn" class="btn btn-primary">Save Configuration</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

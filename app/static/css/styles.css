@@ -1,0 +1,136 @@
+body {
+    background-color: #f8f9fa;
+    padding: 20px 0;
+}
+
+.card, .accordion {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header, .accordion-button {
+    background-color: #f8f9fa;
+}
+
+textarea#historyTextarea {
+    min-height: 400px;
+    resize: vertical;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 0;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.list-group {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+h1 {
+    color: #0d6efd;
+}
+
+/* For the three output cards */
+.col-md-6 .card.mb-3 .card-body {
+    padding: 0.75rem;
+}
+
+.col-md-6 .card.mb-3 .card-header {
+    padding: 0.5rem 0.75rem;
+}
+
+.col-md-6 .card.mb-3 .card-header h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+
+/* For bottom cards */
+.row.mt-4 .card .card-header h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+
+/* Log Page Styles */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.query-text, .raw-response {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+}
+
+.badge {
+    font-size: 0.8rem;
+    padding: 0.4em 0.6em;
+}
+
+/* Tabs Styling */
+#modelTabs {
+    margin-bottom: 0;
+    border-bottom: 0;
+}
+
+#modelTabs .nav-link {
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    margin-right: 5px;
+    color: #495057;
+    font-weight: 500;
+    border-bottom-width: 0;
+}
+
+#modelTabs .nav-link.active {
+    background-color: #fff;
+    color: #0d6efd;
+    border-bottom-color: transparent;
+}
+
+.tab-content {
+    border: 1px solid #dee2e6;
+    border-radius: 0 0.25rem 0.25rem 0.25rem;
+    padding: 10px;
+    background-color: #fff;
+    margin-bottom: 20px;
+}
+
+.tab-pane {
+    padding-top: 5px;
+}
+
+/* Model info alert */
+.tab-pane .alert-info {
+    padding: 0.5rem;
+    margin-bottom: 15px;
+}
+
+/* Processing time badge */
+.tab-pane .alert-info .float-end {
+    font-size: 0.8rem;
+}
+
+/* Make sure tabs are responsive on mobile */
+@media (max-width: 576px) {
+    #modelTabs .nav-link {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.85rem;
+    }
+} 

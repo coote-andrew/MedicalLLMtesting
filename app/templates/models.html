@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Models - Medical History LLM Assistant</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row py-3">
+            <div class="col-12">
+                <h1 class="text-center">Manage Models</h1>
+                <div class="text-center mb-4">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">Back to Main App</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>Available Models</h3>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModelModal">Add New Model</button>
+                    </div>
+                    <div class="card-body">
+                        {% if model_configs %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Type</th>
+                                        <th>Model</th>
+                                        <th>Active</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for model in model_configs %}
+                                    <tr>
+                                        <td>{{ model.name }}</td>
+                                        <td>{{ model.model_type }}</td>
+                                        <td>{{ model.model_name }}</td>
+                                        <td>
+                                            {% if model.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModelModal{{ model.id }}">Edit</button>
+                                                <form action="{{ url_for('main.manage_models') }}" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="{{ model.id }}">
+                                                    <input type="hidden" name="action" value="reorder">
+                                                    <input type="hidden" name="direction" value="up">
+                                                    <button type="submit" class="btn btn-sm btn-secondary" {% if loop.first %}disabled{% endif %}>↑</button>
+                                                </form>
+                                                <form action="{{ url_for('main.manage_models') }}" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="{{ model.id }}">
+                                                    <input type="hidden" name="action" value="reorder">
+                                                    <input type="hidden" name="direction" value="down">
+                                                    <button type="submit" class="btn btn-sm btn-secondary" {% if loop.last %}disabled{% endif %}>↓</button>
+                                                </form>
+                                                <form action="{{ url_for('main.manage_models') }}" method="post" class="d-inline delete-form">
+                                                    <input type="hidden" name="id" value="{{ model.id }}">
+                                                    <input type="hidden" name="action" value="delete">
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this model?')">Delete</button>
+                                                </form>
+                                            </div>
+                                            
+                                            <!-- Edit Model Modal -->
+                                            <div class="modal fade" id="editModelModal{{ model.id }}" tabindex="-1" aria-labelledby="editModelModalLabel{{ model.id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editModelModalLabel{{ model.id }}">Edit Model</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <form action="{{ url_for('main.manage_models') }}" method="post">
+                                                            <div class="modal-body">
+                                                                <input type="hidden" name="id" value="{{ model.id }}">
+                                                                <input type="hidden" name="action" value="update">
+                                                                
+                                                                <div class="mb-3">
+                                                                    <label for="name{{ model.id }}" class="form-label">Display Name</label>
+                                                                    <input type="text" class="form-control" id="name{{ model.id }}" name="name" value="{{ model.name }}" required>
+                                                                </div>
+                                                                
+                                                                <div class="mb-3">
+                                                                    <label for="model_type{{ model.id }}" class="form-label">Model Type</label>
+                                                                    <select class="form-select" id="model_type{{ model.id }}" name="model_type" required>
+                                                                        <option value="ollama" {% if model.model_type == 'ollama' %}selected{% endif %}>Ollama</option>
+                                                                        <option value="openai" {% if model.model_type == 'openai' %}selected{% endif %}>OpenAI</option>
+                                                                    </select>
+                                                                </div>
+                                                                
+                                                                <div class="mb-3">
+                                                                    <label for="model_name{{ model.id }}" class="form-label">Model Name</label>
+                                                                    
+                                                                        {% if model.model_type == 'ollama' %}
+                                                                        <input type="text" class="form-control" id="model_name{{ model.id }}" name="model_name" value="{{ model.model_name }}" required>
+                                                                        <div class="form-text">For Ollama, try models like: llama3.2, mistral, phi3, llama3:8b</div>
+                                                                        {% else %}
+                                                                        <input type="text" class="form-control" id="model_name{{ model.id }}" name="model_name" value="{{ model.model_name }}" required>
+                                                                        <div class="form-text">For OpenAI, try models like: gpt-3.5-turbo, gpt-4, gpt-4-turbo</div>
+                                                                        {% endif %}
+
+                                                                </div>
+                                                                
+                                                                <div class="mb-3 api-key-section" {% if model.model_type != 'openai' %}style="display: none;"{% endif %}>
+                                                                    <label for="api_key{{ model.id }}" class="form-label">API Key</label>
+                                                                    <input type="password" class="form-control" id="api_key{{ model.id }}" name="api_key" placeholder="Enter new API key (leave blank to keep current)" autocomplete="off">
+                                                                    <div class="form-text">API key is required for OpenAI models. Leave blank to keep existing API key.</div>
+                                                                </div>
+                                                                
+                                                                <div class="mb-3">
+                                                                    <label for="system_prompt{{ model.id }}" class="form-label">System Prompt</label>
+                                                                    <textarea class="form-control" id="system_prompt{{ model.id }}" name="system_prompt" rows="5">{{ model.system_prompt }}</textarea>
+                                                                </div>
+                                                                
+                                                                <div class="mb-3 form-check">
+                                                                    <input type="checkbox" class="form-check-input" id="is_active{{ model.id }}" name="is_active" {% if model.is_active %}checked{% endif %}>
+                                                                    <label class="form-check-label" for="is_active{{ model.id }}">Active</label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            No models configured. Add a new model to get started.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Model Modal -->
+    <div class="modal fade" id="addModelModal" tabindex="-1" aria-labelledby="addModelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModelModalLabel">Add New Model</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="{{ url_for('main.manage_models') }}" method="post">
+                    <div class="modal-body">
+                        <input type="hidden" name="action" value="add">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Display Name</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="model_type" class="form-label">Model Type</label>
+                            <select class="form-select" id="model_type" name="model_type" required>
+                                <option value="ollama">Ollama</option>
+                                <option value="openai">OpenAI</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="model_name" class="form-label">Model Name</label>
+                            <input type="text" class="form-control" id="model_name" name="model_name" value="" required>
+                            <div class="form-text">For Ollama, try models like: llama3.2, mistral, phi3, llama3:8b</div>
+                        </div>
+                        
+                        <div class="mb-3 api-key-section" style="display: none;">
+                            <label for="api_key" class="form-label">API Key</label>
+                            <input type="password" class="form-control" id="api_key" name="api_key" autocomplete="off">
+                            <div class="form-text">API key is required for OpenAI models</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="system_prompt" class="form-label">System Prompt</label>
+                            <textarea class="form-control" id="system_prompt" name="system_prompt" rows="5">You are a medical AI assistant. 
+Based on the patient history provided, you will:
+1. Suggest questions to ask the patient
+2. Recommend physical examination components
+3. Suggest relevant investigations from the available list only
+4. Create a problem list with appropriate ICD-10 codes
+
+Format your response in JSON with the following structure:
+{
+  "recommended_questions": "- Question 1\n- Question 2\n- Question 3",
+  "recommended_investigations": "- Investigation 1\n- Investigation 2",
+  "problem_list": "ICD10 Code - Problem Description\nICD10 Code - Problem Description"
+}</textarea>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" checked>
+                            <label class="form-check-label" for="is_active">Active</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Model</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Show/hide API key field based on model type
+        document.addEventListener('DOMContentLoaded', function() {
+            const modelTypeSelects = document.querySelectorAll('select[name="model_type"]');
+            
+            // Store model options as JavaScript objects
+            const modelOptions = {
+                "ollama": ["llama3.2", "mistral", "phi3", "llama3:8b"],
+                "openai": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]
+            };
+            
+            modelTypeSelects.forEach(function(select) {
+                select.addEventListener('change', function() {
+                    const apiKeySection = this.closest('.modal-body').querySelector('.api-key-section');
+                    const modelNameInput = this.closest('.modal-body').querySelector('[name="model_name"]');
+                    
+                    if (this.value === 'openai') {
+                        apiKeySection.style.display = 'block';
+                        
+                        // If it's a select element, update it with OpenAI options
+                        if (modelNameInput.tagName.toLowerCase() === 'select') {
+                            modelNameInput.innerHTML = '';
+                            modelOptions.openai.forEach(modelName => {
+                                const option = document.createElement('option');
+                                option.value = modelName;
+                                option.textContent = modelName;
+                                modelNameInput.appendChild(option);
+                            });
+                        }
+                    } else {
+                        apiKeySection.style.display = 'none';
+                        
+                        // If it's a select element, update it with Ollama options
+                        if (modelNameInput.tagName.toLowerCase() === 'select') {
+                            modelNameInput.innerHTML = '';
+                            modelOptions.ollama.forEach(modelName => {
+                                const option = document.createElement('option');
+                                option.value = modelName;
+                                option.textContent = modelName;
+                                modelNameInput.appendChild(option);
+                            });
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 
